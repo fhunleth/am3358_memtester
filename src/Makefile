@@ -103,19 +103,33 @@ STARTERWARE_SRC=\
        ${STARTERWARE}/drivers/hsi2c.c\
        ${STARTERWARE}/utils/uartStdio.c
 
-APP_SRC=${STARTERWARE_SRC}\
-	bl_init.S\
+C_SRC=${STARTERWARE_SRC}\
 	bl_platform.c\
 	bl_main.c
+
+ASM_SRC=bl_init.S
+
+OBJ=${C_SRC:%.c=%.o} ${ASM_SRC:%.S=%.o}
 
 #
 # Rules for building the application and library
 #
-all: release
+all: $(APPNAME).out
 
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+%.o: %.S
+	$(CC) $(CFLAGS) -o $@ $<
+
+$(APPNAME).out: $(OBJ)
+	$(LD) ${LDFLAGS} ${LPATH} -o $@ -Map $(APPNAME).map \
+	      --defsym BOOT_START_ADDR=$(START_ADDR) \
+	      -T $(APPNAME).lds -lc -lgcc $<
 release:
 	#make TARGET_MODE=release lib
 	make TARGET_MODE=Release bin
+
 
 lib:
 	@for i in ${DIRS};				\

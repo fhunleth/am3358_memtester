@@ -1,0 +1,4 @@
+*.o
+src/boot.map
+src/boot.out
+
