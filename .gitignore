@@ -1,4 +1,5 @@
 *.o
 src/boot.map
 src/boot.out
+src/boot.bin
 

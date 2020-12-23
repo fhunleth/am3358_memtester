@@ -43,6 +43,7 @@ STARTERWARE=../starterware
 #
 DEVICE=am335x
 EVM=beaglebone
+TARGET_MODE=Release
 
 #
 # Include the makefile definitions. This contains compiler, linker and
@@ -78,16 +79,19 @@ CFLAGS+=-D $(BOOT) -D $(DEVICE)
 #
 # Application source files
 #
-STARTERWARE_SRC=\
-       ${STARTERWARE}/system_config/armv7a/cache.c\
-       ${STARTERWARE}/system_config/armv7a/mmu.c\
-       ${STARTERWARE}/system_config/armv7a/gcc/cp15.S\
-       ${STARTERWARE}/system_config/armv7a/$(DEVICE)/device.c\
-       ${STARTERWARE}/platform/beaglebone/board.c\
+STARTERWARE_UNUSED=\
        ${STARTERWARE}/platform/beaglebone/cpsw.c\
        ${STARTERWARE}/platform/beaglebone/ctlregcontext.c\
        ${STARTERWARE}/platform/beaglebone/dmtimer.c\
 	${STARTERWARE}/platform/beaglebone/edma.c\
+	${STARTERWARE}/platform/beaglebone/usb.c\
+	${STARTERWARE}/platform/beaglebone/watchdog.c\
+
+STARTERWARE_C_SRC=\
+       ${STARTERWARE}/system_config/armv7a/cache.c\
+       ${STARTERWARE}/system_config/armv7a/mmu.c\
+       ${STARTERWARE}/system_config/armv7a/$(DEVICE)/device.c\
+       ${STARTERWARE}/platform/beaglebone/board.c\
 	${STARTERWARE}/platform/beaglebone/eeprom.c\
 	${STARTERWARE}/platform/beaglebone/gpio.c\
 	${STARTERWARE}/platform/beaglebone/hsi2c.c\
@@ -98,23 +102,26 @@ STARTERWARE_SRC=\
 	${STARTERWARE}/platform/beaglebone/timertick.c\
 	${STARTERWARE}/platform/beaglebone/uart.c\
 	${STARTERWARE}/platform/beaglebone/uartConsole.c\
-	${STARTERWARE}/platform/beaglebone/usb.c\
-	${STARTERWARE}/platform/beaglebone/watchdog.c\
-       ${STARTERWARE}/drivers/hsi2c.c\
-       ${STARTERWARE}/utils/uartStdio.c
+	${STARTERWARE}/utils/board.c\
+	${STARTERWARE}/drivers/hsi2c.c\
+	${STARTERWARE}/drivers/uart_irda_cir.c\
+	${STARTERWARE}/utils/uartStdio.c
 
-C_SRC=${STARTERWARE_SRC}\
+STARTERWARE_ASM_SRC=\
+       ${STARTERWARE}/system_config/armv7a/gcc/cp15.S
+
+C_SRC=${STARTERWARE_C_SRC}\
 	bl_platform.c\
 	bl_main.c
 
-ASM_SRC=bl_init.S
+ASM_SRC=${STARTERWARE_ASM_SRC} bl_init.S
 
 OBJ=${C_SRC:%.c=%.o} ${ASM_SRC:%.S=%.o}
 
 #
 # Rules for building the application and library
 #
-all: $(APPNAME).out
+all: $(APPNAME).bin
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ $<
@@ -125,7 +132,13 @@ all: $(APPNAME).out
 $(APPNAME).out: $(OBJ)
 	$(LD) ${LDFLAGS} ${LPATH} -o $@ -Map $(APPNAME).map \
 	      --defsym BOOT_START_ADDR=$(START_ADDR) \
-	      -T $(APPNAME).lds -lc -lgcc $<
+	      -T $(APPNAME).lds -lc -lgcc $^ -lc
+
+$(APPNAME).bin: $(APPNAME).out
+	$(BIN) $(BINFLAGS) $< $@
+
+
+
 release:
 	#make TARGET_MODE=release lib
 	make TARGET_MODE=Release bin
@@ -157,12 +170,7 @@ bin:
 # Rules for cleaning
 #
 clean:
-	@rm -rf Debug_MMCSD Debug_UART \
-                Release_MMCSD Release_UART \
-                $(APP_BIN)/Debug_MMCSD $(APP_BIN)/Debug_UART \
-                $(APP_BIN)/Release_MMCSD $(APP_BIN)/Release_UART
+	$(RM) $(APPNAME).bin $(APPNAME).map $(APPNAME).out $(OBJ)
 
-clean+: clean
-	@make TARGET_MODE=clean lib
 
 
