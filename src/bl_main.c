@@ -246,6 +246,7 @@ static void pass()
 static void fail()
 {
     UARTPuts("FAIL!\r\n", -1);
+    Delay(0x100000);
 }
 static void fail_if_nonzero(uint32_t result)
 {
@@ -278,9 +279,12 @@ int main(void)
     UARTPuts("OSD3358 Diagnostics\r\n\n", -1);
 
     init_gpio();
-    test_green_led();
-    test_ddr();
-    UARTPuts("\r\n\nDone.\r\n\n", -1);
+
+    for (;;) {
+        test_green_led();
+        test_ddr();
+    }
+    // UARTPuts("\r\n\nDone.\r\n\n", -1);
 
     return 0;
 }
