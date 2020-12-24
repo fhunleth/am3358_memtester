@@ -211,22 +211,22 @@
 
 #else
 
-#define DDR3_CMD0_SLAVE_RATIO_0            (0x40)
-#define DDR3_CMD0_INVERT_CLKOUT_0          (0x1)
-#define DDR3_CMD1_SLAVE_RATIO_0            (0x40)
-#define DDR3_CMD1_INVERT_CLKOUT_0          (0x1)
-#define DDR3_CMD2_SLAVE_RATIO_0            (0x40)
-#define DDR3_CMD2_INVERT_CLKOUT_0          (0x1)
+#define DDR3_CMD0_SLAVE_RATIO_0            (0x80)
+#define DDR3_CMD0_INVERT_CLKOUT_0          (0x0)
+#define DDR3_CMD1_SLAVE_RATIO_0            (0x80)
+#define DDR3_CMD1_INVERT_CLKOUT_0          (0x0)
+#define DDR3_CMD2_SLAVE_RATIO_0            (0x80)
+#define DDR3_CMD2_INVERT_CLKOUT_0          (0x0)
 
-#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_0    (0x3B)
-#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_0    (0x85)
-#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_0   (0x100)
-#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_0   (0xC1)
+#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_0    (0x3A)
+#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_0    (0x45)
+#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_0   (0x95)
+#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_0   (0x7F)
 
-#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_1    (0x3B)
-#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_1    (0x85)
-#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_1   (0x100)
-#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_1   (0xC1)
+#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_1    (0x3A)
+#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_1    (0x45)
+#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_1   (0x95)
+#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_1   (0x7F)
 
 #define DDR3_CONTROL_DDR_CMD_IOCTRL_0      (0x18B)
 #define DDR3_CONTROL_DDR_CMD_IOCTRL_1      (0x18B)
@@ -239,25 +239,25 @@
 #define DDR3_CONTROL_DDR_IO_CTRL           (0xefffffff)
 
 #define DDR3_EMIF_DDR_PHY_CTRL_1           (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100000)
+#define DDR3_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100007)
 #define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW      (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100000)
+#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100007)
 #define DDR3_EMIF_DDR_PHY_CTRL_2           (0x06)
 
-#define DDR3_EMIF_SDRAM_TIM_1              (0x0888A39B)
-#define DDR3_EMIF_SDRAM_TIM_1_SHDW         (0x0888A39B)
+#define DDR3_EMIF_SDRAM_TIM_1              (0x0AAAD4DB)
+#define DDR3_EMIF_SDRAM_TIM_1_SHDW         (0x0AAAD4DB)
 
-#define DDR3_EMIF_SDRAM_TIM_2              (0x26337FDA)
-#define DDR3_EMIF_SDRAM_TIM_2_SHDW         (0x26337FDA)
+#define DDR3_EMIF_SDRAM_TIM_2              (0x266B7FDA)
+#define DDR3_EMIF_SDRAM_TIM_2_SHDW         (0x266B7FDA)
 
-#define DDR3_EMIF_SDRAM_TIM_3              (0x501F830F)
-#define DDR3_EMIF_SDRAM_TIM_3_SHDM         (0x501F830F)
+#define DDR3_EMIF_SDRAM_TIM_3              (0x501F867F)
+#define DDR3_EMIF_SDRAM_TIM_3_SHDM         (0x501F867F)
 
-#define DDR3_EMIF_SDRAM_REF_CTRL_VAL1      (0x0000093B)
-#define DDR3_EMIF_SDRAM_REF_CTRL_SHDW_VAL1 (0x0000093B)
+#define DDR3_EMIF_SDRAM_REF_CTRL_VAL1      (0x00000C30)
+#define DDR3_EMIF_SDRAM_REF_CTRL_SHDW_VAL1 (0x00000C30)
 
 #define DDR3_EMIF_ZQ_CONFIG_VAL            (0x50074BE4)
-#define DDR3_EMIF_SDRAM_CONFIG             (0x61C04AB2)//termination = 1 (RZQ/4)
+#define DDR3_EMIF_SDRAM_CONFIG             (0x61C05332)//termination = 1 (RZQ/4)
                                                        //dynamic ODT = 2 (RZQ/2)
                                                        //SDRAM drive = 0 (RZQ/6)
                                                        //CWL = 0 (CAS write latency = 5)
@@ -266,62 +266,6 @@
                                                        //PAGESIZE = 2 (10 column bits)
 
 #endif
-
-/* DDR2 init values */
-
-#define DDR2_CMD0_SLAVE_RATIO_0            (0x80)
-#define DDR2_CMD0_SLAVE_FORCE_0            (0x0)
-#define DDR2_CMD0_SLAVE_DELAY_0            (0x0)
-#define DDR2_CMD0_LOCK_DIFF_0              (0x4)
-#define DDR2_CMD0_INVERT_CLKOUT_0          (0x0)
-
-#define DDR2_CMD1_SLAVE_RATIO_0            (0x80)
-#define DDR2_CMD1_SLAVE_FORCE_0            (0x0)
-#define DDR2_CMD1_SLAVE_DELAY_0            (0x0)
-#define DDR2_CMD1_LOCK_DIFF_0              (0x4)
-#define DDR2_CMD1_INVERT_CLKOUT_0          (0x0)
-
-#define DDR2_CMD2_SLAVE_RATIO_0            (0x80)
-#define DDR2_CMD2_SLAVE_FORCE_0            (0x0)
-#define DDR2_CMD2_SLAVE_DELAY_0            (0x0)
-#define DDR2_CMD2_LOCK_DIFF_0              (0x4)
-#define DDR2_CMD2_INVERT_CLKOUT_0          (0x0)
-
-#define DDR2_DATA0_RD_DQS_SLAVE_RATIO_0    (0x12)
-#define DDR2_DATA0_WR_DQS_SLAVE_RATIO_0    (0x0)
-#define DDR2_DATA0_FIFO_WE_SLAVE_RATIO_0   (0x80)
-#define DDR2_DATA0_WR_DATA_SLAVE_RATIO_0   (0x40)
-
-#define DDR2_DATA1_RD_DQS_SLAVE_RATIO_0    (0x12)
-#define DDR2_DATA1_WR_DQS_SLAVE_RATIO_0    (0x0)
-#define DDR2_DATA1_FIFO_WE_SLAVE_RATIO_0   (0x80)
-#define DDR2_DATA1_WR_DATA_SLAVE_RATIO_0   (0x40)
-
-#define DDR2_CONTROL_DDR_CMD_IOCTRL_0      (0x18B)
-#define DDR2_CONTROL_DDR_CMD_IOCTRL_1      (0x18B)
-#define DDR2_CONTROL_DDR_CMD_IOCTRL_2      (0x18B)
-#define DDR2_CONTROL_DDR_DATA_IOCTRL_0     (0x18B)
-#define DDR2_CONTROL_DDR_DATA_IOCTRL_1     (0x18B)
-
-#define DDR2_CONTROL_DDR_IO_CTRL           (0x0fffffff)
-#define DDR2_EMIF_DDR_PHY_CTRL_1           (0x05)
-#define DDR2_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100000)
-#define DDR2_EMIF_DDR_PHY_CTRL_1_SHDW      (0x05)
-#define DDR2_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100000)
-#define DDR2_EMIF_DDR_PHY_CTRL_2           (0x05)
-
-#define DDR2_EMIF_SDRAM_TIM_1		   (0x0666B3D6)
-#define DDR2_EMIF_SDRAM_TIM_1_SHDW         (0x0666B3D6)
-#define DDR2_EMIF_SDRAM_TIM_2              (0x143731DA)
-#define DDR2_EMIF_SDRAM_TIM_2_SHDW	   (0x143731DA)
-#define DDR2_EMIF_SDRAM_TIM_3              (0x00000347)
-#define DDR2_EMIF_SDRAM_TIM_3_SHDM         (0x00000347)
-#define DDR2_EMIF_SDRAM_CONFIG             (0x41805332)
-#define DDR2_EMIF_SDRAM_REF_CTRL_VAL1	   (0x00004650)
-#define DDR2_EMIF_SDRAM_REF_CTRL_SHDW_VAL1 (0x00004650)
-
-#define DDR2_EMIF_SDRAM_REF_CTRL_VAL2	   (0x0000081a)
-#define DDR2_EMIF_SDRAM_REF_CTRL_SHDW_VAL2 (0x0000081a)
 
 #define GPIO_INSTANCE_PIN_NUMBER      (7)
 /******************************************************************************
@@ -1340,55 +1284,7 @@ void ConfigVddOpVoltage(void)
 #endif
 }
 
-/*
- * \brief This function sets up the DDR PHY
- *
- * \param  none
- *
- * \return none
- */
 #ifdef am335x
-static void DDR2PhyInit(void)
-{
-    /* Enable VTP */
-    HWREG(SOC_CONTROL_REGS + CONTROL_VTP_CTRL) |= CONTROL_VTP_CTRL_ENABLE;
-    HWREG(SOC_CONTROL_REGS + CONTROL_VTP_CTRL) &= ~CONTROL_VTP_CTRL_CLRZ;
-    HWREG(SOC_CONTROL_REGS + CONTROL_VTP_CTRL) |= CONTROL_VTP_CTRL_CLRZ;
-    while((HWREG(SOC_CONTROL_REGS + CONTROL_VTP_CTRL) & CONTROL_VTP_CTRL_READY) !=
-                CONTROL_VTP_CTRL_READY);
-
-    /* DDR PHY CMD0 Register configuration */
-    HWREG(CMD0_SLAVE_RATIO_0)   = DDR2_CMD0_SLAVE_RATIO_0;
-    HWREG(CMD0_SLAVE_FORCE_0)   = DDR2_CMD0_SLAVE_FORCE_0;
-    HWREG(CMD0_SLAVE_DELAY_0)   = DDR2_CMD0_SLAVE_DELAY_0;
-    HWREG(CMD0_LOCK_DIFF_0)     = DDR2_CMD0_LOCK_DIFF_0;
-    HWREG(CMD0_INVERT_CLKOUT_0) = DDR2_CMD0_INVERT_CLKOUT_0;
-
-    /* DDR PHY CMD1 Register configuration */
-    HWREG(CMD1_SLAVE_RATIO_0)   = DDR2_CMD1_SLAVE_RATIO_0;
-    HWREG(CMD1_SLAVE_FORCE_0)   =  DDR2_CMD1_SLAVE_FORCE_0;
-    HWREG(CMD1_SLAVE_DELAY_0)   = DDR2_CMD1_SLAVE_DELAY_0;
-    HWREG(CMD1_LOCK_DIFF_0)     = DDR2_CMD1_LOCK_DIFF_0;
-    HWREG(CMD1_INVERT_CLKOUT_0) = DDR2_CMD1_INVERT_CLKOUT_0;
-
-    /* DDR PHY CMD2 Register configuration */
-    HWREG(CMD2_SLAVE_RATIO_0)   = DDR2_CMD2_SLAVE_RATIO_0;
-    HWREG(CMD2_SLAVE_FORCE_0)   = DDR2_CMD2_SLAVE_FORCE_0;
-    HWREG(CMD2_SLAVE_DELAY_0)   = DDR2_CMD2_SLAVE_DELAY_0;
-    HWREG(CMD2_LOCK_DIFF_0)     = DDR2_CMD2_LOCK_DIFF_0;
-    HWREG(CMD2_INVERT_CLKOUT_0) = DDR2_CMD2_INVERT_CLKOUT_0;
-
-    /* DATA macro configuration */
-    HWREG(DATA0_RD_DQS_SLAVE_RATIO_0)  = DDR2_DATA0_RD_DQS_SLAVE_RATIO_0;
-    HWREG(DATA0_WR_DQS_SLAVE_RATIO_0)  = DDR2_DATA0_WR_DQS_SLAVE_RATIO_0;
-    HWREG(DATA0_FIFO_WE_SLAVE_RATIO_0) = DDR2_DATA0_FIFO_WE_SLAVE_RATIO_0;
-    HWREG(DATA0_WR_DATA_SLAVE_RATIO_0) = DDR2_DATA0_WR_DATA_SLAVE_RATIO_0;
-
-    HWREG(DATA1_RD_DQS_SLAVE_RATIO_0)  = DDR2_DATA1_RD_DQS_SLAVE_RATIO_0;
-    HWREG(DATA1_WR_DQS_SLAVE_RATIO_0)  = DDR2_DATA1_WR_DQS_SLAVE_RATIO_0;
-    HWREG(DATA1_FIFO_WE_SLAVE_RATIO_0) = DDR2_DATA1_FIFO_WE_SLAVE_RATIO_0;
-    HWREG(DATA1_WR_DATA_SLAVE_RATIO_0) = DDR2_DATA1_WR_DATA_SLAVE_RATIO_0;
-}
 /*
  * \brief This function sets up the DDR PHY
  *
@@ -1430,7 +1326,7 @@ static void DDR3PhyInit(void)
 }
 
 
-/* \brief This function initializes the DDR2
+/* \brief This function initializes the DDR3
  *
  * \param none
  *
@@ -1498,85 +1394,6 @@ void DDR3Init(void)
     /* The CONTROL_SECURE_EMIF_SDRAM_CONFIG register exports SDRAM configuration
        information to the EMIF */
     HWREG(SOC_CONTROL_REGS + CONTROL_SECURE_EMIF_SDRAM_CONFIG) = DDR3_EMIF_SDRAM_CONFIG;
-
-}
-
-/* \brief This function initializes the DDR2
- *
- * \param none
- *
- * \return none
- *
- */
-void DDR2Init(void)
-{
-    volatile unsigned int delay = 5000;
-
-    /* DDR2 Phy Initialization */
-    DDR2PhyInit();
-
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_CMD_IOCTRL(0)) =
-                                                 DDR2_CONTROL_DDR_CMD_IOCTRL_0;
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_CMD_IOCTRL(1)) =
-                                                 DDR2_CONTROL_DDR_CMD_IOCTRL_1;
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_CMD_IOCTRL(2)) =
-                                                 DDR2_CONTROL_DDR_CMD_IOCTRL_2;
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_DATA_IOCTRL(0)) =
-                                                 DDR2_CONTROL_DDR_DATA_IOCTRL_0;
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_DATA_IOCTRL(1)) =
-                                                 DDR2_CONTROL_DDR_DATA_IOCTRL_1;
-
-    /* IO to work for DDR2 */
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_IO_CTRL) &= DDR2_CONTROL_DDR_IO_CTRL;
-
-    HWREG(SOC_CONTROL_REGS + CONTROL_DDR_CKE_CTRL) |= CONTROL_DDR_CKE_CTRL_DDR_CKE_CTRL;
-
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_DDR_PHY_CTRL_1) = DDR2_EMIF_DDR_PHY_CTRL_1;
-
-    /* Dynamic Power Down */
-    if((DEVICE_VERSION_2_0 == deviceVersion) ||
-       (DEVICE_VERSION_2_1 == deviceVersion))
-    {
-        HWREG(SOC_EMIF_0_REGS + EMIF_DDR_PHY_CTRL_1) |=
-                                              DDR2_EMIF_DDR_PHY_CTRL_1_DY_PWRDN;
-    }
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_DDR_PHY_CTRL_1_SHDW) =
-                                                 DDR2_EMIF_DDR_PHY_CTRL_1_SHDW;
-
-    /* Dynamic Power Down */
-    if((DEVICE_VERSION_2_0 == deviceVersion) ||
-       (DEVICE_VERSION_2_1 == deviceVersion))
-    {
-        HWREG(SOC_EMIF_0_REGS + EMIF_DDR_PHY_CTRL_1_SHDW) |=
-                                         DDR2_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN;
-    }
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_DDR_PHY_CTRL_2) = DDR2_EMIF_DDR_PHY_CTRL_2;
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_1)      =  DDR2_EMIF_SDRAM_TIM_1;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_1_SHDW) = DDR2_EMIF_SDRAM_TIM_1_SHDW;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_2)      = DDR2_EMIF_SDRAM_TIM_2;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_2_SHDW) = DDR2_EMIF_SDRAM_TIM_2_SHDW;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_3)      = DDR2_EMIF_SDRAM_TIM_3;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_TIM_3_SHDW) = DDR2_EMIF_SDRAM_TIM_3_SHDM;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_CONFIG)     = DDR2_EMIF_SDRAM_CONFIG;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_REF_CTRL)   = DDR2_EMIF_SDRAM_REF_CTRL_VAL1;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_REF_CTRL_SHDW) =
-                                                 DDR2_EMIF_SDRAM_REF_CTRL_SHDW_VAL1;
-
-    while(delay--);
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_REF_CTRL) = DDR2_EMIF_SDRAM_REF_CTRL_VAL2;
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_REF_CTRL_SHDW) =
-                                                 DDR2_EMIF_SDRAM_REF_CTRL_SHDW_VAL2;
-
-    HWREG(SOC_EMIF_0_REGS + EMIF_SDRAM_CONFIG)   = DDR2_EMIF_SDRAM_CONFIG;
-
-    /* The CONTROL_SECURE_EMIF_SDRAM_CONFIG register exports SDRAM configuration
-       information to the EMIF */
-    HWREG(SOC_CONTROL_REGS + CONTROL_SECURE_EMIF_SDRAM_CONFIG) = DDR2_EMIF_SDRAM_CONFIG;
 
 }
 #else
@@ -1858,12 +1675,10 @@ void BlPlatformConfig(void)
     {
         freqMultDDR = DDRPLL_M_DDR3;
     }
-    else if(BOARD_ID_EVM_DDR2 == BoardIdGet())
-    {
-        freqMultDDR = DDRPLL_M_DDR2;
-    }
+#elif beaglebone
+    freqMultDDR = DDRPLL_M_DDR3;
 #else
-    freqMultDDR = DDRPLL_M_DDR2;
+#error Something is wrong
 #endif
 
     /* Set the PLL0 to generate 300MHz for ARM */
@@ -1887,15 +1702,11 @@ void BlPlatformConfig(void)
     {
         DDR3Init();
     }
-    else if(BOARD_ID_EVM_DDR2 == BoardIdGet())
-    {
-        DDR2Init();
-    }
+#elif beaglebone
+    DDR3Init();
 #else
-    DDR2Init();
+#error Unknown board
 #endif
-
-
 
     /* UART Initialization */
     UARTSetup();
