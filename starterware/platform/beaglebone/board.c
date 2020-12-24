@@ -53,35 +53,5 @@
 
 unsigned int BoardInfoCheck(unsigned char *boardId, unsigned char *boardVer)
 {
-    if(!(strcmp(BBB_BOARD_NAME, (char *)boardId)))
-    {
-        if(!(strcmp(BBB_A1_VERSION, (char *)boardVer)))
-        {
-            return BOARD_ID_BBB_A1;
-        }
-        else if(!(strcmp(BBB_A2_VERSION, (char *)boardVer)))
-        {
-            return BOARD_ID_BBB_A2;
-        }
-        else if(!(strcmp(BBB_A3_VERSION, (char *)boardVer)))
-        {
-            return BOARD_ID_BBB_A3;
-        }
-        else if(!(strcmp(BBB_A5_VERSION, (char *)boardVer)))
-        {
-            return BOARD_ID_BBB_A5;
-        }
-        else if(!(strcmp(BBB_A6_VERSION, (char *)boardVer)))
-        {
-            return BOARD_ID_BBB_A6;
-        }
-        else
-        {
-            return BOARD_VER_UNKNOWN;
-        }
-    }
-    else
-    {
-        return BOARD_UNKNOWN;
-    }
+    return BOARD_ID_BBB_A6;
 }
