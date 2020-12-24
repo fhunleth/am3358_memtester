@@ -227,11 +227,6 @@ tOPPConfig oppTable[] =
     {MPUPLL_M_1000_MHZ, PMIC_VOLT_SEL_1325MV}  /* OPP NITRO 1000Mhz - 1.325v */
 };
 
-#if defined(NAND)
-  static GPMCNANDTimingInfo_t nandTimingInfo;
-#endif
-
-
 /******************************************************************************
 **                     Local variable Definitions
 *******************************************************************************/
@@ -788,8 +783,6 @@ void SetupReception(unsigned int dcount)
  *
  * \return dest     -  Place holder for read bytes.
  */
-#ifdef beaglebone
-
 void TPS65217RegRead(unsigned char regOffset, unsigned char* dest)
 {
     dataToSlave[0] = regOffset;
@@ -889,212 +882,6 @@ void TPS65217VoltageUpdate(unsigned char dc_cntrl_reg, unsigned char volt_sel)
     TPS65217RegWrite(PROT_LEVEL_2, DEFSLEW, DCDC_GO, DCDC_GO);
 }
 
-#else
-
-/**
- *  \brief                 - Configure vdd2 for various parameters such as
- *                           Multiplier, Maximum Load Current etc .
- *
- * \param  opVolMultiplier - Multiplier.
- *
- * \param  maxLoadCurrent  - Maximum Load Current.
- *
- * \param  timeStep        - Time step - voltage change per us(micro sec).
- *
- * \param  supplyState     - Supply state (on (high/low power mode), off)
- *
- * \return:               None.
- */
-
-void ConfigureVdd2(unsigned int opVolMultiplier, unsigned maxLoadCurrent,
-                   unsigned int timeStep, unsigned int supplyState)
-{
-    dataToSlave[0] = VDD2_REG;
-    dataToSlave[1] = ((opVolMultiplier << PMIC_VDD2_REG_VGAIN_SEL_SHIFT) |
-		              (maxLoadCurrent << PMIC_VDD2_REG_ILMAX_SHIFT)      |
-		              (timeStep << PMIC_VDD2_REG_TSTEP_SHIFT)            |
-		              (supplyState << PMIC_VDD2_REG_ST_SHIFT));
-    tCount = 0;
-    rCount = 0;
-    SetupI2CTransmit(2);
-}
-
-
-/**
- *  \brief Select the VDD2 value. VDD2_OP_REG or VDD2_SR_REG.
- *
- * \param  vddSource  - VDD2 value.
- *
- * \return None.
- */
-void SelectVdd2Source(unsigned int vddSource)
-{
-    /*	Read reg value	*/
-    dataToSlave[0] = VDD2_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    /*	Modify reg value	*/
-    vddSource = (dataFromSlave[0] & (~PMIC_VDD2_OP_REG_CMD)) |
-		 (vddSource << PMIC_VDD2_OP_REG_CMD_SHIFT);
-
-	/*	Write reg value	*/
-    dataToSlave[0] = VDD2_OP_REG;
-    dataToSlave[1] = vddSource;
-    tCount = 0;
-    rCount = 0;
-
-    SetupI2CTransmit(2);
-}
-
-/**
- *  \brief set VDD2_OP voltage value.
- *
- * \param  opVolSelector  - VDD2_OP voltage value.
- *
- * \return None.
- */
-void SetVdd2OpVoltage(unsigned int opVolSelector)
-{
-    /*	Read reg value	*/
-    dataToSlave[0] = VDD2_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    /*	Modify reg value	*/
-    opVolSelector = (dataFromSlave[0] & (~PMIC_VDD2_OP_REG_SEL)) |
-		            (opVolSelector << PMIC_VDD2_OP_REG_SEL_SHIFT);
-
-    /*	Write reg value	*/
-    dataToSlave[0] = VDD2_OP_REG;
-    dataToSlave[1] = opVolSelector;
-    tCount = 0;
-    rCount = 0;
-    SetupI2CTransmit(2);
-
-     /*	Read reg value to verify */
-    dataToSlave[0] = VDD2_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-
-    SetupReception(1);
-
-    while((dataFromSlave[0] & PMIC_VDD2_OP_REG_SEL) !=
-          (opVolSelector << PMIC_VDD2_OP_REG_SEL_SHIFT));
-}
-
-/**
- *  \brief set VDD2_SR voltage value
- *
- * \param  opVolSelector  - VDD2_SR voltage value.
- *
- * \return None.
- */
-void SetVdd2SrVoltage(unsigned int opVolSelector)
-{
-    /*	Write reg value	*/
-    dataToSlave[0] = VDD2_SR_REG;
-    dataToSlave[1] = opVolSelector;
-    tCount = 0;
-    SetupI2CTransmit(2);
-}
-
-/**
- *  \brief Select I2C interface whether SR I2C or Control I2C
- *
- * \param  i2cInstance  - I2c instance to select.
- *
- * \return None.
- */
-void SelectI2CInstance(unsigned int i2cInstance)
-{
-    /*	Read reg value	*/
-    dataToSlave[0] = DEVCTRL_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    /*	Modify reg value */
-    i2cInstance = (dataFromSlave[0] & (~PMIC_DEVCTRL_REG_SR_CTL_I2C_SEL)) |
-                  (i2cInstance << PMIC_DEVCTRL_REG_SR_CTL_I2C_SEL_SHIFT);
-
-    /*	Write reg value	*/
-    dataToSlave[0] = DEVCTRL_REG;
-    dataToSlave[1] = i2cInstance;
-    tCount = 0;
-    rCount = 0;
-
-    SetupI2CTransmit(2);
-}
-
-/**
- *  \brief                 - Configure vdd1 for various parameters such as
- *                           Multiplier, Maximum Load Current etc .
- *
- * \param  opVolMultiplier - Multiplier.
- *
- * \param  maxLoadCurrent  - Maximum Load Current.
- *
- * \param  timeStep        - Time step - voltage change per us(micro sec).
- *
- * \param  supplyState     - Supply state (on (high/low power mode), off)
- *
- * \return:               None.
- */
-void ConfigureVdd1(unsigned int opVolMultiplier, unsigned maxLoadCurrent,
-                   unsigned int timeStep, unsigned int supplyState)
-{
-    dataToSlave[0] = VDD1_REG;
-    dataToSlave[1] = ((opVolMultiplier << PMIC_VDD1_REG_VGAIN_SEL_SHIFT) |
-		      (maxLoadCurrent << PMIC_VDD1_REG_ILMAX_SHIFT) |
-		      (timeStep << PMIC_VDD1_REG_TSTEP_SHIFT) |
-		      (supplyState << PMIC_VDD1_REG_ST_SHIFT) );
-    tCount = 0;
-    rCount = 0;
-    SetupI2CTransmit(2);
-}
-
-/**
- *  \brief Select the VDD1 value. VDD1_OP_REG or VDD1_SR_REG.
- *
- * \param  vddSource  - VDD2 value.
- *
- * \return None.
- */
-void SelectVdd1Source(unsigned int vddSource)
-{
-    /*	Read reg value	*/
-    dataToSlave[0] = VDD1_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    /*	Modify reg value */
-    vddSource = (dataFromSlave[0] & (~PMIC_VDD1_OP_REG_CMD)) |
-		 (vddSource << PMIC_VDD1_OP_REG_CMD_SHIFT);
-
-     /*	Write reg value	*/
-    dataToSlave[0] = VDD1_OP_REG;
-    dataToSlave[1] = vddSource;
-    tCount = 0;
-    rCount = 0;
-    SetupI2CTransmit(2);
-}
-
-#endif
-
 /**
  *  \brief set VDD1_OP voltage value.
  *
@@ -1104,44 +891,8 @@ void SelectVdd1Source(unsigned int vddSource)
  */
 void SetVdd1OpVoltage(unsigned int opVolSelector)
 {
-#ifdef beaglebone
-
     /* Set DCDC2 (MPU) voltage */
     TPS65217VoltageUpdate(DEFDCDC2, opVolSelector);
-
-#elif  defined (evmAM335x) || defined (evmskAM335x)
-
-    /*	Read reg value	*/
-    dataToSlave[0] = VDD1_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    /*	Modify reg value */
-    opVolSelector = (dataFromSlave[0] & (~PMIC_VDD1_OP_REG_SEL)) |
-		    (opVolSelector << PMIC_VDD1_OP_REG_SEL_SHIFT);
-
-    /*	Write reg value	*/
-    dataToSlave[0] = VDD1_OP_REG;
-    dataToSlave[1] = opVolSelector;
-    tCount = 0;
-    rCount = 0;
-    SetupI2CTransmit(2);
-
-    /*	Read reg value to verify */
-    dataToSlave[0] = VDD1_OP_REG;
-    dataFromSlave[0] = 0; // clear receive buffer
-    dataFromSlave[1] = 0;
-    rCount = 0;
-    tCount = 0;
-    SetupReception(1);
-
-    while((dataFromSlave[0] & PMIC_VDD1_OP_REG_SEL) !=
-          (opVolSelector << PMIC_VDD1_OP_REG_SEL_SHIFT));
-
-#endif
 }
 
 /*
@@ -1155,8 +906,6 @@ void SetVdd1OpVoltage(unsigned int opVolSelector)
 void ConfigVddOpVoltage(void)
 {
     SetupI2C();
-
-#ifdef beaglebone
 
     unsigned char pmic_status = 0;
 
@@ -1177,30 +926,8 @@ void ConfigVddOpVoltage(void)
 
 
     TPS65217RegWrite(PROT_LEVEL_2, DEFLS2, LDO_VOLTAGE_OUT_3_3, LDO_MASK);
-
-#elif  defined (evmAM335x) || defined (evmskAM335x)
-
-    /* Configure PMIC slave address */
-    I2CMasterSlaveAddrSet(SOC_I2C_0_REGS, PMIC_CNTL_I2C_SLAVE_ADDR);
-
-	/* Select SR I2C(0) */
-    SelectI2CInstance(PMIC_DEVCTRL_REG_SR_CTL_I2C_SEL_CTL_I2C);
-
-    /* Configure vdd1- need to validate these parameters */
-    ConfigureVdd1(PMIC_VDD1_REG_VGAIN_SEL_X1, PMIC_VDD1_REG_ILMAX_1_5_A,
-	              PMIC_VDD1_REG_TSTEP_12_5, PMIC_VDD1_REG_ST_ON_HI_POW);
-
-    /* Select the source for VDD1 control */
-    SelectVdd1Source(PMIC_VDD1_OP_REG_CMD_OP);
-
-#else
-
-    #error Unsupported EVM !!
-
-#endif
 }
 
-#ifdef am335x
 /*
  * \brief This function sets up the DDR PHY
  *
@@ -1312,11 +1039,6 @@ void DDR3Init(void)
     HWREG(SOC_CONTROL_REGS + CONTROL_SECURE_EMIF_SDRAM_CONFIG) = DDR3_EMIF_SDRAM_CONFIG;
 
 }
-#else
-#error "---------------------------------------------------"
-#error "           UNSUPPORTED MEMORY CONFIGURATION        "
-#error "---------------------------------------------------"
-#endif
 
 /* \brief This function initializes the EMIF
  *
@@ -1353,7 +1075,7 @@ void EMIFInit(void)
 
 #if defined(MMCSD)
 /*
- * \brief This function is used to initialize and configure NAND.
+ * \brief This function is used to initialize and configure MMCSD.
  *
  * \param  none.
  *
