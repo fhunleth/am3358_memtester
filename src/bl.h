@@ -37,7 +37,7 @@
 */
 
 /******************************************************************************
-**                        Macro Definitions 
+**                        Macro Definitions
 *******************************************************************************/
 #ifndef __BL_H__
 #define __BL_H__
@@ -56,7 +56,6 @@ extern unsigned int DspEntryPoint;
 **                    Global Function Declarations
 *******************************************************************************/
 
-extern void BootAbort(void);
 extern void Entry (void);
 
 

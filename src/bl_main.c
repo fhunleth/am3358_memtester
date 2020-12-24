@@ -282,15 +282,6 @@ int main(void)
     test_ddr();
     UARTPuts("\r\n\nDone.\r\n\n", -1);
 
-    /* Do any post-copy config before leaving boot loader */
-    BlPlatformConfigPostBoot();
-
-    UARTPuts("PostBoot done.\r\n\n", -1);
     return 0;
-}
-
-void BootAbort(void)
-{
-    while(1);
 }
 

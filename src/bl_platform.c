@@ -58,24 +58,7 @@
 #include "board.h"
 #include "device.h"
 #include "string.h"
-#ifdef evmAM335x
-    #include "hw_tps65910.h"
-#elif  (defined beaglebone)
-    #include "hw_tps65217.h"
-#elif  (defined evmskAM335x)
-    #include "hw_tps65910.h"
-    #include "pin_mux.h"
-#endif
-
-#if defined(SPI)
-    #include "bl_spi.h"
-#elif defined(MMCSD)
-    #include "bl_mmcsd.h"
-#elif defined(NAND)
-    #include "bl_nand.h"
-    #include "nandlib.h"
-    #include "nand_gpmc.h"
-#endif
+#include "hw_tps65217.h"
 
 /******************************************************************************
 **                     Internal Macro Definitions
@@ -150,67 +133,6 @@
 
 
 /* DDR3 init values */
-#ifdef evmAM335x
-
-#define DDR3_CMD0_SLAVE_RATIO_0            (0x80)
-#define DDR3_CMD0_INVERT_CLKOUT_0          (0x0)
-#define DDR3_CMD1_SLAVE_RATIO_0            (0x80)
-#define DDR3_CMD1_INVERT_CLKOUT_0          (0x0)
-#define DDR3_CMD2_SLAVE_RATIO_0            (0x80)
-#define DDR3_CMD2_INVERT_CLKOUT_0          (0x0)
-
-#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_0    (0x3B)
-#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_0    (0x3C)
-#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_0   (0xA5)
-#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_0   (0x74)
-
-#define DDR3_DATA0_RD_DQS_SLAVE_RATIO_1    (0x3B)
-#define DDR3_DATA0_WR_DQS_SLAVE_RATIO_1    (0x3C)
-#define DDR3_DATA0_FIFO_WE_SLAVE_RATIO_1   (0xA5)
-#define DDR3_DATA0_WR_DATA_SLAVE_RATIO_1   (0x74)
-
-#define DDR3_CONTROL_DDR_CMD_IOCTRL_0      (0x18B)
-#define DDR3_CONTROL_DDR_CMD_IOCTRL_1      (0x18B)
-#define DDR3_CONTROL_DDR_CMD_IOCTRL_2      (0x18B)
-
-#define DDR3_CONTROL_DDR_DATA_IOCTRL_0      (0x18B)
-#define DDR3_CONTROL_DDR_DATA_IOCTRL_1      (0x18B)
-
-#define DDR3_CONTROL_DDR_IO_CTRL           (0xefffffff)
-
-#define DDR3_EMIF_DDR_PHY_CTRL_1           (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100000)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW      (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100000)
-#define DDR3_EMIF_DDR_PHY_CTRL_2           (0x06)
-
-#define DDR3_EMIF_SDRAM_TIM_1              (0x0888A39B)
-#define DDR3_EMIF_SDRAM_TIM_1_SHDW         (0x0888A39B)
-
-#define DDR3_EMIF_SDRAM_TIM_2              (0x26517FDA)
-#define DDR3_EMIF_SDRAM_TIM_2_SHDW         (0x26517FDA)
-
-#define DDR3_EMIF_SDRAM_TIM_3              (0x501F84EF)
-#define DDR3_EMIF_SDRAM_TIM_3_SHDM         (0x501F84EF)
-
-#define DDR3_EMIF_SDRAM_REF_CTRL_VAL1      (0x0000093B)
-#define DDR3_EMIF_SDRAM_REF_CTRL_SHDW_VAL1 (0x0000093B)
-
-#define DDR3_EMIF_ZQ_CONFIG_VAL            (0x50074BE4)
-
-/*
-** termination = 1 (RZQ/4)
-** dynamic ODT = 2 (RZQ/2)
-** SDRAM drive = 0 (RZQ/6)
-** CWL = 0 (CAS write latency = 5)
-** CL = 2 (CAS latency = 5)
-** ROWSIZE = 7 (16 row bits)
-** PAGESIZE = 2 (10 column bits)
-*/
-#define DDR3_EMIF_SDRAM_CONFIG             (0x61C04BB2)
-
-#else
-
 #define DDR3_CMD0_SLAVE_RATIO_0            (0x80)
 #define DDR3_CMD0_INVERT_CLKOUT_0          (0x0)
 #define DDR3_CMD1_SLAVE_RATIO_0            (0x80)
@@ -265,19 +187,13 @@
                                                        //ROWSIZE = 5 (14 row bits)
                                                        //PAGESIZE = 2 (10 column bits)
 
-#endif
-
 #define GPIO_INSTANCE_PIN_NUMBER      (7)
 /******************************************************************************
 **                     Local function Declarations
 *******************************************************************************/
 
-#ifdef evmskAM335x
-static void DDRVTTEnable(void);
-#endif
 extern void SPIConfigure(void);
 extern void I2C1ModuleClkConfig(void);
-
 
 /******************************************************************************
 **                     Global variable Definitions
@@ -1435,147 +1351,6 @@ void EMIFInit(void)
            CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK));
 }
 
-#if defined(NAND)
-
-/******************************************************************************
-*                                                                             *
-*                                                                             *
-* \brief  Function to initalize the GPMC NAND timing and base addr info.      *
-*                                                                             *
-* \param  nandTimimgInfo : Pointer to structure containing                    *
-*                          NAND timing info.                                  *
-*                                                                             *
-* \return none.                                                               *
-*                                                                             *
-******************************************************************************/
-static void NANDTimingInfoInit(void *TimingInfo)
-{
-
-    GPMCNANDTimingInfo_t *nandTimingInfo;
-
-    nandTimingInfo = (GPMCNANDTimingInfo_t * )TimingInfo;
-
-    nandTimingInfo->CSWrOffTime               = NAND_CSWROFFTIME;
-    nandTimingInfo->CSRdOffTime               = NAND_CSRDOFFTIME;
-    nandTimingInfo->CSExtDelayFlag            = GPMC_CS_EXTRA_NODELAY;
-    nandTimingInfo->CSOnTime                  = NAND_CSONTIME;
-
-    nandTimingInfo->ADVAADMuxWrOffTime        = NAND_ADVAADMUXWROFFTIME;
-    nandTimingInfo->ADVAADMuxRdOffTime        = NAND_ADVAADMUXRDOFFTIME;
-    nandTimingInfo->ADVWrOffTime              = NAND_ADVWROFFTIME;
-    nandTimingInfo->ADVRdOffTime              = NAND_ADVRDOFFTIME;
-    nandTimingInfo->ADVExtDelayFlag           = GPMC_ADV_EXTRA_NODELAY;
-    nandTimingInfo->ADVAADMuxOnTime           = NAND_ADVAADMUXONTIME;
-    nandTimingInfo->ADVOnTime                 = NAND_ADVONTIME;
-
-    nandTimingInfo->WEOffTime                 = NAND_WEOFFTIME;
-    nandTimingInfo->WEExtDelayFlag            = GPMC_WE_EXTRA_NODELAY;
-    nandTimingInfo->WEOnTime                  = NAND_WEONTIME;
-    nandTimingInfo->OEAADMuxOffTime           = NAND_OEAADMUXOFFTIME;
-    nandTimingInfo->OEOffTime                 = NAND_OEOFFTIME;
-    nandTimingInfo->OEExtDelayFlag            = GPMC_OE_EXTRA_NODELAY;
-    nandTimingInfo->OEAADMuxOnTime            = NAND_OEAADMUXONTIME;
-    nandTimingInfo->OEOnTime                  = NAND_OEONTIME;
-
-    nandTimingInfo->rdCycleTime               = NAND_RDCYCLETIME;
-    nandTimingInfo->wrCycleTime               = NAND_WRCYCLETIME;
-    nandTimingInfo->rdAccessTime              = NAND_RDACCESSTIME;
-    nandTimingInfo->pageBurstAccessTime       = NAND_PAGEBURSTACCESSTIME;
-
-    nandTimingInfo->cycle2CycleDelay          = NAND_CYCLE2CYCLEDELAY;
-    nandTimingInfo->cycle2CycleDelaySameCSCfg = NAND_CYCLE2CYCLESAMECSEN;
-    nandTimingInfo->cycle2CycleDelayDiffCSCfg = NAND_CYCLE2CYCLEDIFFCSEN;
-    nandTimingInfo->busTAtime                 = NAND_BUSTURNAROUND;
-}
-
-
-/******************************************************************************
-*                                                                             *
-* \brief  Function to initialize the device and controller info.              *
-*                                                                             *
-* \param  nandInfo      : Pointer to structure containing controller and      *
-*                         device information.                                 *
-*                                                                             *
-* \param  csNum         : Chip select where device is interfaced.             *
-*                                                                             *
-* \return none.                                                               *
-*                                                                             *
-******************************************************************************/
-void BlPlatformNANDInfoInit(NandInfo_t *nandInfo)
-{
-    NandCtrlInfo_t *hNandCtrlInfo = nandInfo->hNandCtrlInfo;
-    NandDmaInfo_t  *hNandDmaInfo  = nandInfo->hNandDmaInfo;
-    NandEccInfo_t  *hNandEccInfo  = nandInfo->hNandEccInfo;
-
-    /* Init the NAND Device Info */
-    nandInfo->opMode                        = NAND_DATA_XFER_MODE;
-    nandInfo->eccType                       = NAND_ECC_ALGO_BCH_8BIT;
-
-    nandInfo->chipSelectCnt                 = 1;
-    nandInfo->dieCnt                        = 1;
-    nandInfo->chipSelects[0]                = NAND_CHIP_SELECT;
-    nandInfo->busWidth                      = NAND_BUSWIDTH;
-    nandInfo->pageSize                      = NAND_PAGE_SIZE_IN_BYTES;
-    nandInfo->blkSize                       = NAND_BLOCK_SIZE_IN_BYTES;
-    nandInfo->manId                         = NAND_MANUFATURER_MICRON_ID;
-    nandInfo->devId                         = NAND_DEVICE_ID;
-    nandInfo->dataRegAddr                   = (SOC_GPMC_0_REGS +
-                                          GPMC_NAND_DATA(GPMC_CHIP_SELECT_0));
-    nandInfo->addrRegAddr                   = (SOC_GPMC_0_REGS +
-                                          GPMC_NAND_ADDRESS(GPMC_CHIP_SELECT_0));
-    nandInfo->cmdRegAddr                    = (SOC_GPMC_0_REGS +
-                                          GPMC_NAND_COMMAND(GPMC_CHIP_SELECT_0));
-    /* Init the NAND Controller Info struct */
-    hNandCtrlInfo->CtrlInit                 = GPMCNANDInit;
-    hNandCtrlInfo->WaitPinStatusGet         = GPMCNANDWaitPinStatusGet;
-    hNandCtrlInfo->currChipSelect           = NAND_CHIP_SELECT;
-    hNandCtrlInfo->baseAddr                 = SOC_GPMC_0_REGS;
-    hNandCtrlInfo->eccSupported             = (NAND_ECC_ALGO_HAMMING_1BIT |
-                                          NAND_ECC_ALGO_BCH_4BIT |
-                                          NAND_ECC_ALGO_BCH_8BIT |
-                                          NAND_ECC_ALGO_BCH_16BIT );
-
-    hNandCtrlInfo->waitPin                  = GPMC_WAIT_PIN0;
-    hNandCtrlInfo->waitPinPol               = GPMC_WAIT_PIN_POLARITY_LOW;
-    hNandCtrlInfo->wpPinPol                 = GPMC_WP_PIN_LEVEL_HIGH;
-    hNandCtrlInfo->chipSelectBaseAddr[0]    = NAND_CS0_BASEADDR;
-    hNandCtrlInfo->chipSelectRegionSize[0]  = NAND_CS0_REGIONSIZE;
-    hNandCtrlInfo->hNandTimingInfo          = &nandTimingInfo;
-    NANDTimingInfoInit(hNandCtrlInfo->hNandTimingInfo);
-
-
-    /* Init the NAND Ecc Info */
-    hNandEccInfo->baseAddr                  = SOC_ELM_0_REGS;
-    hNandEccInfo->ECCInit                   = GPMCNANDECCInit;
-    hNandEccInfo->ECCEnable                 = GPMCNANDECCEnable;
-    hNandEccInfo->ECCDisable                = GPMCNANDECCDisable;
-    hNandEccInfo->ECCWriteSet               = GPMCNANDECCWriteSet;
-    hNandEccInfo->ECCReadSet                = GPMCNANDECCReadSet;
-    hNandEccInfo->ECCCalculate              = GPMCNANDECCCalculate;
-    hNandEccInfo->ECCCheckAndCorrect        = GPMCNANDECCCheckAndCorrect;
-
-    /* Init the NAND DMA info */
-    hNandDmaInfo->DMAXfer                   = NULL;
-    hNandDmaInfo->DMAInit                   = NULL;
-    hNandDmaInfo->DMAXferSetup              = NULL;
-    hNandDmaInfo->DMAXferStatusGet          = NULL;
-}
-
-/*
- * \brief This function is used to initialize and configure NAND.
- *
- * \param  none.
- *
- * \return none
-*/
-void BlPlatformNANDSetup(void)
-{
-    /* Enable clock for NAND and Do the PINMUXing */
-    NANDPinMuxSetup();
-    GPMCClkConfig();
-}
-#endif
-
 #if defined(MMCSD)
 /*
  * \brief This function is used to initialize and configure NAND.
@@ -1589,35 +1364,6 @@ void BlPlatformMMCSDSetup(void)
     /* Enable clock for MMCSD and Do the PINMUXing */
     HSMMCSDPinMuxSetup();
     HSMMCSDModuleClkConfig();
-}
-#endif
-
-
-#if defined(SPI)
-/*
- * \brief This function is used to initialize and configure SPI Module.
- *
- * \param  none.
- *
- * \return none
-*/
-void BlPlatformSPISetup(void)
-{
-    unsigned int regVal;
-
-    /* Enable clock for SPI */
-    regVal = (HWREG(SOC_CM_PER_REGS + CM_PER_SPI0_CLKCTRL) &
-                    ~(CM_PER_SPI0_CLKCTRL_MODULEMODE));
-
-    regVal |= CM_PER_SPI0_CLKCTRL_MODULEMODE_ENABLE;
-
-    HWREG(SOC_CM_PER_REGS + CM_PER_SPI0_CLKCTRL) = regVal;
-
-    /* Setup SPI PINMUX */
-    McSPIPinMuxSetup(0);
-    McSPI0CSPinMuxSetup(0);
-
-    SPIConfigure();
 }
 #endif
 
@@ -1668,18 +1414,7 @@ void BlPlatformConfig(void)
     while(HWREG(SOC_WDT_1_REGS + WDT_WWPS) != 0x00);
 
     /* Configure DDR frequency */
-#ifdef evmskAM335x
     freqMultDDR = DDRPLL_M_DDR3;
-#elif evmAM335x
-    if(BOARD_ID_EVM_DDR3 == BoardIdGet())
-    {
-        freqMultDDR = DDRPLL_M_DDR3;
-    }
-#elif beaglebone
-    freqMultDDR = DDRPLL_M_DDR3;
-#else
-#error Something is wrong
-#endif
 
     /* Set the PLL0 to generate 300MHz for ARM */
     PLLInit();
@@ -1692,91 +1427,11 @@ void BlPlatformConfig(void)
     EMIFInit();
 
     /* DDR Initialization */
-
-#ifdef evmskAM335x
-    /* Enable DDR_VTT */
-    DDRVTTEnable();
     DDR3Init();
-#elif evmAM335x
-    if(BOARD_ID_EVM_DDR3 == BoardIdGet())
-    {
-        DDR3Init();
-    }
-#elif beaglebone
-    DDR3Init();
-#else
-#error Unknown board
-#endif
 
     /* UART Initialization */
     UARTSetup();
 }
-
-/*
-** Enable DDR_VTT.
-**
-*/
-#ifdef evmskAM335x
-static void DDRVTTEnable(void)
-{
-    GPIO0ModuleClkConfig();
-
-    GPIO_PMUX_OFFADDR_VALUE(0, 7, PAD_FS_RXE_PD_PUPDE(7));
-
-    /* Resetting the GPIO module. */
-    GPIOModuleReset(SOC_GPIO_0_REGS);
-
-    /* Enabling the GPIO module. */
-    GPIOModuleEnable(SOC_GPIO_0_REGS);
-
-    /* Setting the GPIO pin as an input pin. */
-    GPIODirModeSet(SOC_GPIO_0_REGS,
-                   GPIO_INSTANCE_PIN_NUMBER,
-                   GPIO_DIR_OUTPUT);
-
-    GPIOPinWrite(SOC_GPIO_0_REGS, GPIO_INSTANCE_PIN_NUMBER,
-                 GPIO_PIN_HIGH);
-
-}
-#endif
-
-/*
- * \brief This function does any post boot setup/init
- *
- * \param  none
- *
- * \return none
-*/
-void BlPlatformConfigPostBoot( void )
-{
-}
-
-/*
- * \brief This function copies the image form SPI to RAM
- *
- * \param  none
- *
- * \return Status of the copy operation.
-*/
-#if defined(SPI)
-
-unsigned int BlPlatformSPIImageCopy()
-{
-    ti_header header;
-
-    /* Spi read function to read the header */
-    BlSPIReadFlash(IMAGE_OFFSET, sizeof(header), (unsigned char *)&header);
-
-    /* Copies application from SPI flash to DDR RAM */
-    BlSPIReadFlash( IMAGE_OFFSET + 8,
-                    header.image_size,
-                    (unsigned char *)(header.load_addr) );
-
-    entryPoint = (unsigned int)header.load_addr;
-
-    return (TRUE);
-}
-#endif
 
 /*
  * \brief This function copies the image form MMCSD to RAM
@@ -1792,35 +1447,6 @@ unsigned int BlPlatformMMCSDImageCopy()
 {
     HSMMCSDInit();
     HSMMCSDImageCopy();
-
-    return (TRUE);
-}
-
-#endif
-
-/*
- * \brief This function copies the image form NAND to RAM
- *
- * \param  none
- *
- * \return Status of the copy operation.
-*/
-
-#if defined(NAND)
-
-unsigned int BlPlatformNANDImageCopy(NandInfo_t *nandInfo)
-{
-
-    ti_header header;
-
-    /* Spi read function to read the header */
-    BlNANDReadFlash(nandInfo, IMAGE_OFFSET, sizeof(header), (unsigned char *)&header);
-
-    /* Copies application from SPI flash to DDR RAM */
-    BlNANDReadFlash( nandInfo, IMAGE_OFFSET + sizeof(header),
-                     header.image_size, (unsigned char *)(header.load_addr) );
-
-    entryPoint = (unsigned int)header.load_addr;
 
     return (TRUE);
 }
