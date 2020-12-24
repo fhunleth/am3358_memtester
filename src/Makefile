@@ -80,22 +80,22 @@ CFLAGS+=-D $(BOOT) -D $(DEVICE)
 # Application source files
 #
 STARTERWARE_UNUSED=\
-       ${STARTERWARE}/platform/beaglebone/cpsw.c\
-       ${STARTERWARE}/platform/beaglebone/ctlregcontext.c\
-       ${STARTERWARE}/platform/beaglebone/dmtimer.c\
+	${STARTERWARE}/platform/beaglebone/cpsw.c\
+	${STARTERWARE}/platform/beaglebone/ctlregcontext.c\
+	${STARTERWARE}/platform/beaglebone/dmtimer.c\
 	${STARTERWARE}/platform/beaglebone/edma.c\
 	${STARTERWARE}/platform/beaglebone/usb.c\
 	${STARTERWARE}/platform/beaglebone/watchdog.c\
 
 STARTERWARE_C_SRC=\
-       ${STARTERWARE}/system_config/armv7a/cache.c\
-       ${STARTERWARE}/system_config/armv7a/mmu.c\
-       ${STARTERWARE}/system_config/armv7a/$(DEVICE)/device.c\
-       ${STARTERWARE}/platform/beaglebone/board.c\
+	${STARTERWARE}/system_config/armv7a/cache.c\
+	${STARTERWARE}/system_config/armv7a/mmu.c\
+	${STARTERWARE}/system_config/armv7a/$(DEVICE)/device.c\
+	${STARTERWARE}/platform/beaglebone/board.c\
 	${STARTERWARE}/platform/beaglebone/eeprom.c\
 	${STARTERWARE}/platform/beaglebone/gpio.c\
 	${STARTERWARE}/platform/beaglebone/hsi2c.c\
-        ${STARTERWARE}/platform/beaglebone/hs_mmcsd.c\
+	${STARTERWARE}/platform/beaglebone/hs_mmcsd.c\
 	${STARTERWARE}/platform/beaglebone/rtc.c\
 	${STARTERWARE}/platform/beaglebone/sysdelay.c\
 	${STARTERWARE}/platform/beaglebone/sysperf.c\
@@ -103,12 +103,13 @@ STARTERWARE_C_SRC=\
 	${STARTERWARE}/platform/beaglebone/uart.c\
 	${STARTERWARE}/platform/beaglebone/uartConsole.c\
 	${STARTERWARE}/utils/board.c\
+	${STARTERWARE}/drivers/gpio_v2.c\
 	${STARTERWARE}/drivers/hsi2c.c\
 	${STARTERWARE}/drivers/uart_irda_cir.c\
 	${STARTERWARE}/utils/uartStdio.c
 
 STARTERWARE_ASM_SRC=\
-       ${STARTERWARE}/system_config/armv7a/gcc/cp15.S
+	${STARTERWARE}/system_config/armv7a/gcc/cp15.S
 
 C_SRC=${STARTERWARE_C_SRC}\
 	bl_platform.c\
@@ -163,7 +164,7 @@ bin:
 	@mkdir -p $(APP_BIN)/$(TARGET_MODE)_$(BOOT)
 	@cp $(TARGET_MODE)_$(BOOT)/$(APPNAME).out $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).out
 	$(BIN) $(BINFLAGS) $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).out \
-               $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).bin
+		 $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).bin
 
 
 #

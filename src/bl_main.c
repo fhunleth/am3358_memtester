@@ -1,85 +1,122 @@
-/**
- * \file  bl_main.c
- *
- * \brief Implements main function for StarterWare bootloader
- *
-*/
-
-/*
-* Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com/
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*    Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*
-*    Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the
-*    distribution.
-*
-*    Neither the name of Texas Instruments Incorporated nor the names of
-*    its contributors may be used to endorse or promote products derived
-*    from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-*  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-*  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-*  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-*  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include "uartStdio.h"
 #include "bl_platform.h"
 #include "bl.h"
 
-/******************************************************************************
-**                    External Variable Declararions
-*******************************************************************************/
-
-extern char *deviceType;
-
-
-/******************************************************************************
-**                     Local Function Declararion
-*******************************************************************************/
-
-
-/******************************************************************************
-**                     Global Variable Definitions
-*******************************************************************************/
+#include "gpio_v2.h"
+#include "hw/hw_control_AM335x.h"
+#include "hw/hw_types.h"
+#include "hw/hw_cm_per.h"
 
 unsigned int entryPoint = 0;
 unsigned int DspEntryPoint = 0;
 
+static void Delay(volatile unsigned int count)
+{
+    while(count--);
+}
 
-/******************************************************************************
-**                     Global Function Definitions
-*******************************************************************************/
-/*
- * \brief This function initializes the system and copies the image.
- *
- * \param  none
- *
- * \return none
-*/
+
+static void GPIO3ModuleClkConfig(void)
+{
+
+    /* Writing to MODULEMODE field of CM_PER_GPIO1_CLKCTRL register. */
+    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) |=
+          CM_PER_GPIO3_CLKCTRL_MODULEMODE_ENABLE;
+
+    /* Waiting for MODULEMODE field to reflect the written value. */
+    while(CM_PER_GPIO3_CLKCTRL_MODULEMODE_ENABLE !=
+          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
+           CM_PER_GPIO3_CLKCTRL_MODULEMODE));
+    /*
+    ** Writing to OPTFCLKEN_GPIO_3_GDBCLK bit in CM_PER_GPIO3_CLKCTRL
+    ** register.
+    */
+    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) |=
+          CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK;
+
+    /*
+    ** Waiting for OPTFCLKEN_GPIO_3_GDBCLK bit to reflect the desired
+    ** value.
+    */
+    while(CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK !=
+          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
+           CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK));
+
+    /*
+    ** Waiting for IDLEST field in CM_PER_GPIO3_CLKCTRL register to attain the
+    ** desired value.
+    */
+    while((CM_PER_GPIO3_CLKCTRL_IDLEST_FUNC <<
+           CM_PER_GPIO3_CLKCTRL_IDLEST_SHIFT) !=
+           (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
+            CM_PER_GPIO3_CLKCTRL_IDLEST));
+
+    /*
+    ** Waiting for CLKACTIVITY_GPIO_3_GDBCLK bit in CM_PER_L4LS_CLKSTCTRL
+    ** register to attain desired value.
+    */
+    while(CM_PER_L4LS_CLKSTCTRL_CLKACTIVITY_GPIO_3_GDBCLK !=
+          (HWREG(SOC_CM_PER_REGS + CM_PER_L4LS_CLKSTCTRL) &
+           CM_PER_L4LS_CLKSTCTRL_CLKACTIVITY_GPIO_3_GDBCLK));
+}
+
+static void init_gpio()
+{
+    UARTPuts("Initialize GPIOs.", -1);
+
+    GPIO0ModuleClkConfig();
+    UARTPuts(".", -1);
+    GPIO1ModuleClkConfig();
+    UARTPuts(".", -1);
+    GPIO3ModuleClkConfig();
+    UARTPuts(".", -1);
+    GPIOModuleEnable(SOC_GPIO_3_REGS);
+    UARTPuts(".", -1);
+    GPIOModuleReset(SOC_GPIO_3_REGS);
+    UARTPuts(".OK.\r\n", -1);
+}
+
+static void test_green_led()
+{
+    UARTPuts("Test green LED.", -1);
+
+    // GPIO 3, pin 20
+    HWREG(SOC_CONTROL_REGS + CONTROL_CONF_MCASP0_AXR1) = CONTROL_CONF_MUXMODE(7);
+    UARTPuts(".", -1);
+
+    GPIODirModeSet(SOC_GPIO_3_REGS,
+                   20,
+                   GPIO_DIR_OUTPUT);
+    UARTPuts(".", -1);
+
+    int i;
+    for (i = 0; i < 5; i++) {
+        UARTPuts(".", -1);
+        GPIOPinWrite(SOC_GPIO_3_REGS,
+                     20,
+                     GPIO_PIN_HIGH);
+
+        Delay(0xFFFFF);
+
+        UARTPuts("O", -1);
+        GPIOPinWrite(SOC_GPIO_3_REGS,
+                     20,
+                     GPIO_PIN_LOW);
+        Delay(0xFFFFF);
+    }
+    UARTPuts("OK.\r\n", -1);
+}
+
+
 int main(void)
 {
     /* Configures PLL and DDR controller*/
     BlPlatformConfig();
 
-    UARTPuts("StarterWare ", -1);
-    UARTPuts(deviceType, -1);
-    UARTPuts(" Boot Loader\n\r", -1);
+    UARTPuts("OSD3358 Diagnostics\r\n\n", -1);
 
+    init_gpio();
+    test_green_led();
 
     UARTPuts("Done.\r\n\n", -1);
 
@@ -95,6 +132,3 @@ void BootAbort(void)
     while(1);
 }
 
-/******************************************************************************
-**                              END OF FILE
-*******************************************************************************/
