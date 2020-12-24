@@ -139,39 +139,8 @@ $(APPNAME).bin: $(APPNAME).out
 	$(BIN) $(BINFLAGS) $< $@
 
 
-
-release:
-	#make TARGET_MODE=release lib
-	make TARGET_MODE=Release bin
-
-
-lib:
-	@for i in ${DIRS};				\
-	do						\
-		if [ -f $${i}/makefile ] ;		    \
-		then					  \
-			make Release -C $${i} || exit $$?; \
-		fi;					   \
-	done;
-
-
-bin:
-	$(CC)  $(CFLAGS) $(APP_SRC)
-	@mkdir -p $(TARGET_MODE)_$(BOOT)/
-	@mv *.o* $(TARGET_MODE)_$(BOOT)/
-	$(LD) ${LDFLAGS} ${LPATH} -o $(TARGET_MODE)_$(BOOT)/$(APPNAME).out -Map $(TARGET_MODE)_$(BOOT)/$(APPNAME).map \
-	      $(TARGET_MODE)_$(BOOT)/*.o*  --defsym BOOT_START_ADDR=$(START_ADDR) -T $(APPNAME).lds $(APP_LIB) -lc -lgcc $(APP_LIB) -lc -lgcc
-	@mkdir -p $(APP_BIN)/$(TARGET_MODE)_$(BOOT)
-	@cp $(TARGET_MODE)_$(BOOT)/$(APPNAME).out $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).out
-	$(BIN) $(BINFLAGS) $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).out \
-		 $(APP_BIN)/$(TARGET_MODE)_$(BOOT)/$(APPNAME).bin
-
-
-#
-# Rules for cleaning
-#
 clean:
 	$(RM) $(APPNAME).bin $(APPNAME).map $(APPNAME).out $(OBJ)
 
-
+.PHONE: clean
 
