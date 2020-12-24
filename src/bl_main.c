@@ -7,6 +7,8 @@
 #include "hw/hw_types.h"
 #include "hw/hw_cm_per.h"
 
+#include <stdint.h>
+
 unsigned int entryPoint = 0;
 unsigned int DspEntryPoint = 0;
 
@@ -96,17 +98,177 @@ static void test_green_led()
                      20,
                      GPIO_PIN_HIGH);
 
-        Delay(0xFFFFF);
+        Delay(0x1FFFFF);
 
-        UARTPuts("O", -1);
+        UARTPuts("+", -1);
         GPIOPinWrite(SOC_GPIO_3_REGS,
                      20,
                      GPIO_PIN_LOW);
-        Delay(0xFFFFF);
+        Delay(0x1FFFFF);
     }
     UARTPuts("OK.\r\n", -1);
 }
 
+// See https://barrgroup.com/embedded-systems/how-to/memory-test-suite-c
+static uint32_t ddr_test_data_bus(volatile uint32_t *address)
+{
+    uint32_t pattern;
+
+    /*
+     * Perform a walking 1's test at the given address.
+     */
+    for (pattern = 1; pattern != 0; pattern <<= 1) {
+        /*
+         * Write the test pattern.
+         */
+        *address = pattern;
+
+        /*
+         * Read it back (immediately is okay for this test).
+         */
+        if (*address != pattern)
+            return pattern;
+    }
+
+    return 0;
+}
+
+static uint32_t *ddr_test_address_bus(volatile uint32_t *base_address, unsigned long num_bytes)
+{
+    uint32_t address_mask = (num_bytes/sizeof(uint32_t) - 1);
+    uint32_t offset;
+    uint32_t test_offset;
+
+    uint32_t pattern     = 0xAAAAAAAA;
+    uint32_t antipattern = 0x55555555;
+
+    /*
+     * Write the default pattern at each of the power-of-two offsets.
+     */
+    for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
+    {
+        base_address[offset] = pattern;
+    }
+
+    /*
+     * Check for address bits stuck high.
+     */
+    test_offset = 0;
+    base_address[test_offset] = antipattern;
+
+    for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
+    {
+        if (base_address[offset] != pattern)
+        {
+            return ((uint32_t *) &base_address[offset]);
+        }
+    }
+
+    base_address[test_offset] = pattern;
+
+    /*
+     * Check for address bits stuck low or shorted.
+     */
+    for (test_offset = 1; (test_offset & address_mask) != 0; test_offset <<= 1)
+    {
+        base_address[test_offset] = antipattern;
+
+		if (base_address[0] != pattern)
+		{
+			return ((uint32_t *) &base_address[test_offset]);
+		}
+
+        for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
+        {
+            if ((base_address[offset] != pattern) && (offset != test_offset))
+            {
+                return ((uint32_t *) &base_address[test_offset]);
+            }
+        }
+
+        base_address[test_offset] = pattern;
+    }
+
+    return (NULL);
+
+}
+
+uint32_t *ddr_test_device(volatile uint32_t *baseAddress, uint32_t num_bytes)
+{
+    uint32_t offset;
+    uint32_t num_words = num_bytes / sizeof(uint32_t);
+
+    uint32_t pattern;
+    uint32_t antipattern;
+
+    /*
+     * Fill memory with a known pattern.
+     */
+    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
+    {
+        baseAddress[offset] = pattern;
+    }
+
+    /*
+     * Check each location and invert it for the second pass.
+     */
+    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
+    {
+        if (baseAddress[offset] != pattern)
+        {
+            return ((uint32_t *) &baseAddress[offset]);
+        }
+
+        antipattern = ~pattern;
+        baseAddress[offset] = antipattern;
+    }
+
+    /*
+     * Check each location for the inverted pattern and zero it.
+     */
+    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
+    {
+        antipattern = ~pattern;
+        if (baseAddress[offset] != antipattern)
+        {
+            return ((uint32_t *) &baseAddress[offset]);
+        }
+    }
+
+    return (NULL);
+
+}
+
+static void pass()
+{
+    UARTPuts("OK.\r\n", -1);
+}
+static void fail()
+{
+    UARTPuts("FAIL!\r\n", -1);
+}
+static void fail_if_nonzero(uint32_t result)
+{
+    if (result == 0)
+        pass();
+    else
+        fail();
+}
+
+static void test_ddr()
+{
+    uint32_t *ddr_start = (uint32_t *) DDR_START_ADDR;
+    uint32_t num_bytes = 1024 * 1024;
+
+    UARTPuts("Testing DDR data bus...", -1);
+    fail_if_nonzero(ddr_test_data_bus(ddr_start));
+
+    UARTPuts("Testing DDR address bus...", -1);
+    fail_if_nonzero((uint32_t) ddr_test_address_bus(ddr_start, num_bytes));
+
+    UARTPuts("Testing DDR device...", -1);
+    fail_if_nonzero((uint32_t) ddr_test_device(ddr_start, num_bytes));
+}
 
 int main(void)
 {
@@ -117,8 +279,8 @@ int main(void)
 
     init_gpio();
     test_green_led();
-
-    UARTPuts("Done.\r\n\n", -1);
+    test_ddr();
+    UARTPuts("\r\n\nDone.\r\n\n", -1);
 
     /* Do any post-copy config before leaving boot loader */
     BlPlatformConfigPostBoot();
