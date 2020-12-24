@@ -160,11 +160,11 @@
 //#define DDR3_CONTROL_DDR_IO_CTRL           (0x0fffffff)
 #define DDR3_CONTROL_DDR_IO_CTRL           (0xefffffff)
 
-#define DDR3_EMIF_DDR_PHY_CTRL_1           (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100007)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW      (0x06)
-#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100007)
-#define DDR3_EMIF_DDR_PHY_CTRL_2           (0x06)
+#define DDR3_EMIF_DDR_PHY_CTRL_1           (0x00100007)
+#define DDR3_EMIF_DDR_PHY_CTRL_1_DY_PWRDN         (0x00100000)
+#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW      (0x00100007)
+#define DDR3_EMIF_DDR_PHY_CTRL_1_SHDW_DY_PWRDN    (0x00100000)
+#define DDR3_EMIF_DDR_PHY_CTRL_2           (0x00100007)
 
 #define DDR3_EMIF_SDRAM_TIM_1              (0x0AAAD4DB)
 #define DDR3_EMIF_SDRAM_TIM_1_SHDW         (0x0AAAD4DB)
