@@ -1,7 +1,9 @@
 #include "uartStdio.h"
+#include "consoleUtils.h"
 #include "bl_platform.h"
 #include "bl.h"
 
+#include "device.h"
 #include "gpio_v2.h"
 #include "hw/hw_control_AM335x.h"
 #include "hw/hw_types.h"
@@ -239,12 +241,17 @@ uint32_t *ddr_test_device(volatile uint32_t *baseAddress, uint32_t num_bytes)
 
 }
 
+static int passes = 0;
+static int failures = 0;
+
 static void pass()
 {
+    passes++;
     UARTPuts("OK.\r\n", -1);
 }
 static void fail()
 {
+    failures++;
     UARTPuts("FAIL!\r\n", -1);
     Delay(0x100000);
 }
@@ -271,20 +278,62 @@ static void test_ddr()
     fail_if_nonzero((uint32_t) ddr_test_device(ddr_start, num_bytes));
 }
 
+static void dump_tps65217_regs()
+{
+    unsigned char reg;
+    for (reg = 0; reg < 1; reg++) {
+        unsigned char value = 0;
+        TPS65217RegRead(reg, &value);
+
+        ConsoleUtilsPrintf("TPS65217 0x%02x: 0x%02x\r\n", reg, value);
+    }
+}
+
+static void dump_info()
+{
+    UARTPuts("AM3358 Info\r\n\n", -1);
+    int deviceVersion = DeviceVersionGet();
+    unsigned int oppSupport = SysConfigOppDataGet();
+
+    ConsoleUtilsPrintf("Device version: %d\r\n", deviceVersion);
+    ConsoleUtilsPrintf("SysConfig OPP Data:");
+    if(DEVICE_VERSION_1_0 == deviceVersion)
+        ConsoleUtilsPrintf(" 720");
+    else if(DEVICE_VERSION_2_0 == deviceVersion)
+        ConsoleUtilsPrintf(" 800");
+    else if(DEVICE_VERSION_2_1 == deviceVersion) {
+        if(!(oppSupport & EFUSE_OPPNT_1000_MASK))
+            ConsoleUtilsPrintf(" NT_1000");
+        if(!(oppSupport & EFUSE_OPPTB_800_MASK))
+            ConsoleUtilsPrintf(" TB_800");
+        if(!(oppSupport & EFUSE_OPP120_720_MASK))
+            ConsoleUtilsPrintf(" 120_720");
+        if(!(oppSupport & EFUSE_OPP100_600_MASK))
+            ConsoleUtilsPrintf(" 100_600");
+        if(!(oppSupport & EFUSE_OPP100_300_MASK))
+            ConsoleUtilsPrintf(" 100_300");
+    }
+    ConsoleUtilsPrintf("\r\n");
+}
+
 int main(void)
 {
     /* Configures PLL and DDR controller*/
     BlPlatformConfig();
 
-    UARTPuts("OSD3358 Diagnostics\r\n\n", -1);
+    dump_info();
 
     init_gpio();
 
+    UARTPuts("\r\nStarting tests...\r\n\n", -1);
+    int times = 0;
     for (;;) {
+        dump_tps65217_regs();
         test_green_led();
         test_ddr();
+        times++;
+        ConsoleUtilsPrintf("%d iterations: %d failures, %d tests\r\n", times, failures, passes+failures);
     }
-    // UARTPuts("\r\n\nDone.\r\n\n", -1);
 
     return 0;
 }

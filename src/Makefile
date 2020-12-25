@@ -102,10 +102,11 @@ STARTERWARE_C_SRC=\
 	${STARTERWARE}/platform/beaglebone/timertick.c\
 	${STARTERWARE}/platform/beaglebone/uart.c\
 	${STARTERWARE}/platform/beaglebone/uartConsole.c\
-	${STARTERWARE}/utils/board.c\
 	${STARTERWARE}/drivers/gpio_v2.c\
 	${STARTERWARE}/drivers/hsi2c.c\
 	${STARTERWARE}/drivers/uart_irda_cir.c\
+	${STARTERWARE}/utils/board.c\
+	${STARTERWARE}/utils/consoleUtils.c\
 	${STARTERWARE}/utils/uartStdio.c
 
 STARTERWARE_ASM_SRC=\
