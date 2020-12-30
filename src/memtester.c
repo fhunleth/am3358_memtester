@@ -31,6 +31,8 @@ char progress[] = "-\\|/";
 #define PROGRESSOFTEN 2500
 #define ONE 0x00000001L
 
+#define NUM_LOOPS(COUNT, SMALL, BIG) ((COUNT) > 1024*1024 ? (SMALL) : (BIG))
+
 union {
     unsigned char bytes[UL_LEN/8];
     uint32_t val;
@@ -80,12 +82,7 @@ int test_stuck_address(uint32_t volatile *bufa, size_t count) {
 
     ConsoleUtilsPrintf("           ");
 
-    int loops;
-    if (count > 1024 * 1024)
-        loops = 1;
-    else
-        loops = 16;
-
+    int loops = NUM_LOOPS(count, 1, 16);
     for (j = 0; j < loops; j++) {
         ConsoleUtilsPrintf("\b\b\b\b\b\b\b\b\b\b\b");
         p1 = (uint32_t volatile *) bufa;
@@ -249,7 +246,8 @@ int test_solidbits_comparison(uint32_t volatile *bufa, uint32_t volatile *bufb, 
 
     ConsoleUtilsPrintf("           ");
 
-    for (j = 0; j < 64; j++) {
+    int loops = NUM_LOOPS(count, 1, 64);
+    for (j = 0; j < loops; j++) {
         ConsoleUtilsPrintf("\b\b\b\b\b\b\b\b\b\b\b");
         q = (j % 2) == 0 ? UL_ONEBITS : 0;
         ConsoleUtilsPrintf("setting %3u", j);
@@ -280,7 +278,8 @@ int test_checkerboard_comparison(uint32_t volatile *bufa, uint32_t volatile *buf
 
     ConsoleUtilsPrintf("           ");
 
-    for (j = 0; j < 64; j++) {
+    int loops = NUM_LOOPS(count, 2, 64);
+    for (j = 0; j < loops; j++) {
         ConsoleUtilsPrintf("\b\b\b\b\b\b\b\b\b\b\b");
         q = (j % 2) == 0 ? CHECKERBOARD1 : CHECKERBOARD2;
         ConsoleUtilsPrintf("setting %3u", j);
@@ -310,7 +309,8 @@ int test_blockseq_comparison(uint32_t volatile *bufa, uint32_t volatile *bufb, s
 
     ConsoleUtilsPrintf("           ");
 
-    for (j = 0; j < 256; j++) {
+    int loops = NUM_LOOPS(count, 8, 256);
+    for (j = 0; j < loops; j++) {
         ConsoleUtilsPrintf("\b\b\b\b\b\b\b\b\b\b\b");
         p1 = (uint32_t volatile *) bufa;
         p2 = (uint32_t volatile *) bufb;

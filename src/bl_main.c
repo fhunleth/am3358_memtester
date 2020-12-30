@@ -13,32 +13,8 @@
 #include <stdint.h>
 #include <string.h>
 
-static void dump_info()
-{
-    UARTPuts("AM3358 Info\r\n\n", -1);
-    int deviceVersion = DeviceVersionGet();
-    unsigned int oppSupport = SysConfigOppDataGet();
-
-    ConsoleUtilsPrintf("Device version: %d\r\n", deviceVersion);
-    ConsoleUtilsPrintf("SysConfig OPP Data:");
-    if(DEVICE_VERSION_1_0 == deviceVersion)
-        ConsoleUtilsPrintf(" 720");
-    else if(DEVICE_VERSION_2_0 == deviceVersion)
-        ConsoleUtilsPrintf(" 800");
-    else if(DEVICE_VERSION_2_1 == deviceVersion) {
-        if(!(oppSupport & EFUSE_OPPNT_1000_MASK))
-            ConsoleUtilsPrintf(" NT_1000");
-        if(!(oppSupport & EFUSE_OPPTB_800_MASK))
-            ConsoleUtilsPrintf(" TB_800");
-        if(!(oppSupport & EFUSE_OPP120_720_MASK))
-            ConsoleUtilsPrintf(" 120_720");
-        if(!(oppSupport & EFUSE_OPP100_600_MASK))
-            ConsoleUtilsPrintf(" 100_600");
-        if(!(oppSupport & EFUSE_OPP100_300_MASK))
-            ConsoleUtilsPrintf(" 100_300");
-    }
-    ConsoleUtilsPrintf("\r\n");
-}
+#define DDR_SIZE (512 * 1024 * 1024)
+#define FAST_SIZE (128 * 1024)
 
 struct test {
     char *name;
@@ -110,13 +86,16 @@ int main(void)
     /* Configures PLL and DDR controller*/
     BlPlatformConfig();
 
-    dump_info();
+    ConsoleUtilsPrintf("\nmemtester for the OSD3358\r\n\nNote: Using Octavo recommended DDR timings.\n\n");
 
-    UARTPuts("\nFast run (128 KB)\r\n\n", -1);
-    memtester((uint32_t *) DDR_START_ADDR, 128 * 1024, 1);
+    ConsoleUtilsPrintf("\nFast run (1st %d KB)\r\n\n", FAST_SIZE / 1024);
+    memtester((uint32_t *) DDR_START_ADDR, FAST_SIZE, 1);
 
-    UARTPuts("\nSlow runs (512 MB)\r\n\n", -1);
-    memtester((uint32_t *) DDR_START_ADDR, 512 * 1024 * 1024, 1);
+    ConsoleUtilsPrintf("\nFast run (Last %d KB)\r\n\n", FAST_SIZE / 1024);
+    memtester((uint32_t *) (DDR_START_ADDR + DDR_SIZE - FAST_SIZE), FAST_SIZE, 1);
+
+    ConsoleUtilsPrintf("\nSlow runs (%d MB each)\r\n\n", DDR_SIZE / 1024 / 1024);
+    memtester((uint32_t *) DDR_START_ADDR, DDR_SIZE, 0);
 
     return 0;
 }
