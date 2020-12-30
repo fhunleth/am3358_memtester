@@ -49,7 +49,6 @@ LIB_C=${LIB_PATH}/arm-none-eabi/lib/
 #
 TARGET=armv7a
 COMPILER=gcc
-BOOT=UART
 
 #
 # Default Console type is set to UART to redirect all I/O operations
@@ -102,7 +101,7 @@ endif
 CFLAGS=-mcpu=cortex-a8 -mtune=cortex-a8 #-march=armv7-a
 CFLAGS+=-c ${${TARGET_MODE}_FLAG} -mlong-calls -fdata-sections -funsigned-char \
             -ffunction-sections -Wall ${IPATH} -Dgcc ${DEVICE_D} ${EVM_D} \
-            -D SUPPORT_UNALIGNED -D ${BOOT} -D${CONSOLE}
+            -D SUPPORT_UNALIGNED -D${CONSOLE}
 #
 # Defining the cross compiler tool prefix
 #

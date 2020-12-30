@@ -57,7 +57,7 @@ int compare_regions(uint32_t volatile *bufa, uint32_t volatile *bufb, size_t cou
 
         if (a != b) {
             ConsoleUtilsPrintf(
-                    "FAILURE: 0x%08x != 0x%08x at offset 0x%08x. (Different bits: 0x%08x)\n",
+                    "FAILURE: 0x%08x != 0x%08x at offset 0x%08x. Different bits: 0x%08x\n",
                     a, b, (uint32_t) (i * sizeof(uint32_t)), a ^ b);
 
             /* ConsoleUtilsPrintf("Skipping to next test..."); */

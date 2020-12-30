@@ -51,30 +51,14 @@ TARGET_MODE=Release
 #
 include ./makedefs
 
-#
-# Target Directories that need to be built
-#
-DIRS=${DRIVERS_BLD} ${PLATFORM_BLD} ${UTILITY_BLD}
-
-#
-# The application directory and name
-#
-APPDIR=bootloader
-APPNAME=boot
+APPNAME=memtester
 
 #
 # Where the bootloader will be loaded to by the ROM code
 # starting 1Kbyte cannot be used due to hardware limitation
 START_ADDR=0x402F0400
 
-
-#
-# Application Location
-#
-APP=${ROOT}bootloader/
-APP_BIN=${ROOT}/binary/${TARGET}/${COMPILER}/${DEVICE}/${EVM}/$(APPDIR)
-
-CFLAGS+=-D $(BOOT) -D $(DEVICE)
+CFLAGS+=-D $(DEVICE)
 
 #
 # Application source files
