@@ -1,8 +1,10 @@
 # AM335x memtester
 
-This is a port of [memtester](http://pyropus.ca/software/memtester/) memory
-tester to run bare metal on an AM335x. It's run from AM335x on-chip RAM and
-exercises the entire DDR3 address range.
+This is a port of the [memtester](http://pyropus.ca/software/memtester/) memory
+tester to run from on-chip RAM on AM335x-based boards and test DDR3 memory. It runs
+bare metal and has very few requirements on the target device to run. This
+repository contains the full source code so it's possible to modify DDR timings
+and test regions as needed.
 
 ## Running
 
