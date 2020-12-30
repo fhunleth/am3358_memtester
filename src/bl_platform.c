@@ -59,6 +59,7 @@
 #include "device.h"
 #include "string.h"
 #include "hw_tps65217.h"
+#include "consoleUtils.h"
 
 /******************************************************************************
 **                     Internal Macro Definitions
@@ -793,6 +794,20 @@ void TPS65217RegRead(unsigned char regOffset, unsigned char* dest)
     *dest = dataFromSlave[0];
 }
 
+// Working version...
+void TPS65217RegRead2(unsigned char regOffset, unsigned char* dest)
+{
+    I2CMasterSlaveAddrSet(SOC_I2C_0_REGS, PMIC_TPS65217_I2C_SLAVE_ADDR);
+
+    dataToSlave[0] = regOffset;
+    tCount = 0;
+    rCount = 0;
+
+    SetupReception(1);
+
+    *dest = dataFromSlave[0];
+}
+
 /**
  *  \brief            - Generic function that can write a TPS65217 PMIC
  *                      register or bit field regardless of protection
@@ -827,6 +842,11 @@ void TPS65217RegWrite(unsigned char port_level, unsigned char regOffset,
          read_val &= (~mask);
          read_val |= (dest_val & mask);
          dest_val = read_val;
+        //  ConsoleUtilsPrintf("TPS65217RegWrite: %02x from 0x%02x -> 0x%02x\r\n",
+        //      regOffset, dataFromSlave[0], dest_val);
+    } else {
+        // ConsoleUtilsPrintf("TPS65217RegWrite: %02x -> 0x%02x\r\n",
+        //      regOffset, dest_val);
     }
 
     if(port_level > 0)
@@ -906,7 +926,6 @@ void SetVdd1OpVoltage(unsigned int opVolSelector)
 void ConfigVddOpVoltage(void)
 {
     SetupI2C();
-
     unsigned char pmic_status = 0;
 
     /* Configure PMIC slave address */
@@ -1126,6 +1145,7 @@ void BlPlatformConfig(void)
     ConfigVddOpVoltage();
 
     oppMaxIdx = BootMaxOppGet();
+    //oppMaxIdx = EFUSE_OPP50_300;
 
     SetVdd1OpVoltage(oppTable[oppMaxIdx].pmicVolt);
 

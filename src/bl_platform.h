@@ -135,7 +135,7 @@ extern void BlPlatformConfig(void);
 extern void BlPlatformMMCSDSetup(void);
 extern void BL_PLATFORM_MMCSDSetup(void);
 extern unsigned int BlPlatformMMCSDImageCopy();
-extern void TPS65217RegRead(unsigned char regOffset, unsigned char* dest);
+extern void TPS65217RegRead2(unsigned char regOffset, unsigned char* dest);
 
 #endif /* _BL_PLATFORM_H__ */
 

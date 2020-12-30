@@ -9,285 +9,9 @@
 #include "hw/hw_types.h"
 #include "hw/hw_cm_per.h"
 
+#include "memtester.h"
 #include <stdint.h>
-
-unsigned int entryPoint = 0;
-unsigned int DspEntryPoint = 0;
-
-static void Delay(volatile unsigned int count)
-{
-    while(count--);
-}
-
-
-static void GPIO3ModuleClkConfig(void)
-{
-
-    /* Writing to MODULEMODE field of CM_PER_GPIO1_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) |=
-          CM_PER_GPIO3_CLKCTRL_MODULEMODE_ENABLE;
-
-    /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_GPIO3_CLKCTRL_MODULEMODE_ENABLE !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
-           CM_PER_GPIO3_CLKCTRL_MODULEMODE));
-    /*
-    ** Writing to OPTFCLKEN_GPIO_3_GDBCLK bit in CM_PER_GPIO3_CLKCTRL
-    ** register.
-    */
-    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) |=
-          CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK;
-
-    /*
-    ** Waiting for OPTFCLKEN_GPIO_3_GDBCLK bit to reflect the desired
-    ** value.
-    */
-    while(CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
-           CM_PER_GPIO3_CLKCTRL_OPTFCLKEN_GPIO_3_GDBCLK));
-
-    /*
-    ** Waiting for IDLEST field in CM_PER_GPIO3_CLKCTRL register to attain the
-    ** desired value.
-    */
-    while((CM_PER_GPIO3_CLKCTRL_IDLEST_FUNC <<
-           CM_PER_GPIO3_CLKCTRL_IDLEST_SHIFT) !=
-           (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO3_CLKCTRL) &
-            CM_PER_GPIO3_CLKCTRL_IDLEST));
-
-    /*
-    ** Waiting for CLKACTIVITY_GPIO_3_GDBCLK bit in CM_PER_L4LS_CLKSTCTRL
-    ** register to attain desired value.
-    */
-    while(CM_PER_L4LS_CLKSTCTRL_CLKACTIVITY_GPIO_3_GDBCLK !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L4LS_CLKSTCTRL) &
-           CM_PER_L4LS_CLKSTCTRL_CLKACTIVITY_GPIO_3_GDBCLK));
-}
-
-static void init_gpio()
-{
-    UARTPuts("Initialize GPIOs.", -1);
-
-    GPIO0ModuleClkConfig();
-    UARTPuts(".", -1);
-    GPIO1ModuleClkConfig();
-    UARTPuts(".", -1);
-    GPIO3ModuleClkConfig();
-    UARTPuts(".", -1);
-    GPIOModuleEnable(SOC_GPIO_3_REGS);
-    UARTPuts(".", -1);
-    GPIOModuleReset(SOC_GPIO_3_REGS);
-    UARTPuts(".OK.\r\n", -1);
-}
-
-static void test_green_led()
-{
-    UARTPuts("Test green LED.", -1);
-
-    // GPIO 3, pin 20
-    HWREG(SOC_CONTROL_REGS + CONTROL_CONF_MCASP0_AXR1) = CONTROL_CONF_MUXMODE(7);
-    UARTPuts(".", -1);
-
-    GPIODirModeSet(SOC_GPIO_3_REGS,
-                   20,
-                   GPIO_DIR_OUTPUT);
-    UARTPuts(".", -1);
-
-    int i;
-    for (i = 0; i < 5; i++) {
-        UARTPuts(".", -1);
-        GPIOPinWrite(SOC_GPIO_3_REGS,
-                     20,
-                     GPIO_PIN_HIGH);
-
-        Delay(0x1FFFFF);
-
-        UARTPuts("+", -1);
-        GPIOPinWrite(SOC_GPIO_3_REGS,
-                     20,
-                     GPIO_PIN_LOW);
-        Delay(0x1FFFFF);
-    }
-    UARTPuts("OK.\r\n", -1);
-}
-
-// See https://barrgroup.com/embedded-systems/how-to/memory-test-suite-c
-static uint32_t ddr_test_data_bus(volatile uint32_t *address)
-{
-    uint32_t pattern;
-
-    /*
-     * Perform a walking 1's test at the given address.
-     */
-    for (pattern = 1; pattern != 0; pattern <<= 1) {
-        /*
-         * Write the test pattern.
-         */
-        *address = pattern;
-
-        /*
-         * Read it back (immediately is okay for this test).
-         */
-        if (*address != pattern)
-            return pattern;
-    }
-
-    return 0;
-}
-
-static uint32_t *ddr_test_address_bus(volatile uint32_t *base_address, unsigned long num_bytes)
-{
-    uint32_t address_mask = (num_bytes/sizeof(uint32_t) - 1);
-    uint32_t offset;
-    uint32_t test_offset;
-
-    uint32_t pattern     = 0xAAAAAAAA;
-    uint32_t antipattern = 0x55555555;
-
-    /*
-     * Write the default pattern at each of the power-of-two offsets.
-     */
-    for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
-    {
-        base_address[offset] = pattern;
-    }
-
-    /*
-     * Check for address bits stuck high.
-     */
-    test_offset = 0;
-    base_address[test_offset] = antipattern;
-
-    for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
-    {
-        if (base_address[offset] != pattern)
-        {
-            return ((uint32_t *) &base_address[offset]);
-        }
-    }
-
-    base_address[test_offset] = pattern;
-
-    /*
-     * Check for address bits stuck low or shorted.
-     */
-    for (test_offset = 1; (test_offset & address_mask) != 0; test_offset <<= 1)
-    {
-        base_address[test_offset] = antipattern;
-
-		if (base_address[0] != pattern)
-		{
-			return ((uint32_t *) &base_address[test_offset]);
-		}
-
-        for (offset = 1; (offset & address_mask) != 0; offset <<= 1)
-        {
-            if ((base_address[offset] != pattern) && (offset != test_offset))
-            {
-                return ((uint32_t *) &base_address[test_offset]);
-            }
-        }
-
-        base_address[test_offset] = pattern;
-    }
-
-    return (NULL);
-
-}
-
-uint32_t *ddr_test_device(volatile uint32_t *baseAddress, uint32_t num_bytes)
-{
-    uint32_t offset;
-    uint32_t num_words = num_bytes / sizeof(uint32_t);
-
-    uint32_t pattern;
-    uint32_t antipattern;
-
-    /*
-     * Fill memory with a known pattern.
-     */
-    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
-    {
-        baseAddress[offset] = pattern;
-    }
-
-    /*
-     * Check each location and invert it for the second pass.
-     */
-    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
-    {
-        if (baseAddress[offset] != pattern)
-        {
-            return ((uint32_t *) &baseAddress[offset]);
-        }
-
-        antipattern = ~pattern;
-        baseAddress[offset] = antipattern;
-    }
-
-    /*
-     * Check each location for the inverted pattern and zero it.
-     */
-    for (pattern = 1, offset = 0; offset < num_words; pattern++, offset++)
-    {
-        antipattern = ~pattern;
-        if (baseAddress[offset] != antipattern)
-        {
-            return ((uint32_t *) &baseAddress[offset]);
-        }
-    }
-
-    return (NULL);
-
-}
-
-static int passes = 0;
-static int failures = 0;
-
-static void pass()
-{
-    passes++;
-    UARTPuts("OK.\r\n", -1);
-}
-static void fail()
-{
-    failures++;
-    UARTPuts("FAIL!\r\n", -1);
-    Delay(0x100000);
-}
-static void fail_if_nonzero(uint32_t result)
-{
-    if (result == 0)
-        pass();
-    else
-        fail();
-}
-
-static void test_ddr()
-{
-    uint32_t *ddr_start = (uint32_t *) DDR_START_ADDR;
-    uint32_t num_bytes = 1024 * 1024;
-
-    UARTPuts("Testing DDR data bus...", -1);
-    fail_if_nonzero(ddr_test_data_bus(ddr_start));
-
-    UARTPuts("Testing DDR address bus...", -1);
-    fail_if_nonzero((uint32_t) ddr_test_address_bus(ddr_start, num_bytes));
-
-    UARTPuts("Testing DDR device...", -1);
-    fail_if_nonzero((uint32_t) ddr_test_device(ddr_start, num_bytes));
-}
-
-static void dump_tps65217_regs()
-{
-    unsigned char reg;
-    for (reg = 0; reg < 1; reg++) {
-        unsigned char value = 0;
-        TPS65217RegRead(reg, &value);
-
-        ConsoleUtilsPrintf("TPS65217 0x%02x: 0x%02x\r\n", reg, value);
-    }
-}
+#include <string.h>
 
 static void dump_info()
 {
@@ -316,6 +40,71 @@ static void dump_info()
     ConsoleUtilsPrintf("\r\n");
 }
 
+struct test {
+    char *name;
+    int (*fp)();
+};
+
+static struct test tests[] = {
+    { "Random Value", test_random_value },
+    { "Compare XOR", test_xor_comparison },
+    { "Compare SUB", test_sub_comparison },
+    { "Compare MUL", test_mul_comparison },
+    { "Compare DIV",test_div_comparison },
+    { "Compare OR", test_or_comparison },
+    { "Compare AND", test_and_comparison },
+    { "Sequential Increment", test_seqinc_comparison },
+    { "Solid Bits", test_solidbits_comparison },
+    { "Block Sequential", test_blockseq_comparison },
+    { "Checkerboard", test_checkerboard_comparison },
+    { "Bit Spread", test_bitspread_comparison },
+    { "Bit Flip", test_bitflip_comparison },
+    { "Walking Ones", test_walkbits1_comparison },
+    { "Walking Zeroes", test_walkbits0_comparison },
+#ifdef TEST_NARROW_WRITES
+    { "8-bit Writes", test_8bit_wide_random },
+    { "16-bit Writes", test_16bit_wide_random },
+#endif
+    { NULL, NULL }
+};
+
+static int memtester(volatile uint32_t *base_address, size_t buf_size, int loops)
+{
+    size_t halflen = buf_size / 2;
+    size_t count = halflen / sizeof(uint32_t);
+    uint32_t volatile *bufa = base_address;
+    uint32_t volatile *bufb = (uint32_t volatile *) ((size_t) base_address + halflen);
+    int rc = 0;
+
+    for(int loop=1; ((!loops) || loop <= loops); loop++) {
+        ConsoleUtilsPrintf("Loop %u", loop);
+        if (loops) {
+            ConsoleUtilsPrintf("/%u", loops);
+        }
+        ConsoleUtilsPrintf(":\n");
+        ConsoleUtilsPrintf("  %20s: ", "Stuck Address");
+        if (!test_stuck_address(base_address, buf_size / sizeof(uint32_t))) {
+             ConsoleUtilsPrintf("ok\n");
+        } else {
+            rc |= 1;
+        }
+        for (int i=0;;i++) {
+            if (!tests[i].name) break;
+
+            ConsoleUtilsPrintf("  %20s: ", tests[i].name);
+            if (!tests[i].fp(bufa, bufb, count)) {
+                ConsoleUtilsPrintf("ok\n");
+            } else {
+                rc |= 2;
+            }
+            /* clear buffer */
+            memset((void*) base_address, 255, buf_size);
+        }
+        ConsoleUtilsPrintf("\n");
+    }
+    return rc;
+}
+
 int main(void)
 {
     /* Configures PLL and DDR controller*/
@@ -323,17 +112,11 @@ int main(void)
 
     dump_info();
 
-    init_gpio();
+    UARTPuts("\nFast run (128 KB)\r\n\n", -1);
+    memtester((uint32_t *) DDR_START_ADDR, 128 * 1024, 1);
 
-    UARTPuts("\r\nStarting tests...\r\n\n", -1);
-    int times = 0;
-    for (;;) {
-        dump_tps65217_regs();
-        test_green_led();
-        test_ddr();
-        times++;
-        ConsoleUtilsPrintf("%d iterations: %d failures, %d tests\r\n", times, failures, passes+failures);
-    }
+    UARTPuts("\nSlow runs (512 MB)\r\n\n", -1);
+    memtester((uint32_t *) DDR_START_ADDR, 512 * 1024 * 1024, 1);
 
     return 0;
 }

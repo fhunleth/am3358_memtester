@@ -114,6 +114,7 @@ STARTERWARE_ASM_SRC=\
 
 C_SRC=${STARTERWARE_C_SRC}\
 	bl_platform.c\
+	memtester.c\
 	bl_main.c
 
 ASM_SRC=${STARTERWARE_ASM_SRC} bl_init.S
